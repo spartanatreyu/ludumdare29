@@ -3,7 +3,7 @@
 
 var game = new Phaser.Game(640, 480, Phaser.AUTO, 'game');
 
-/*TEST STATE*/
+/*TEST STATE*//*
 var testState = function(){};
 
 testState.prototype.preload = function()
@@ -69,7 +69,7 @@ testState.prototype.update = function()
 		console.log(this.player);
 	}
 
-	/*Keep the position as intergers to make the rendering not blur out*/
+	//Keep the position as intergers to make the rendering not blur out
 	this.player.body.x = Math.round(this.player.body.x);
 	this.player.body.y = Math.round(this.player.body.y);
 
@@ -77,7 +77,7 @@ testState.prototype.update = function()
 	{
 		game.state.add('game', testStateOutside, true);
 	}
-};
+};*/
 
 /*testState.prototype.render = function()
 {
@@ -95,6 +95,7 @@ testStateOutside.prototype.preload = function()
 	game.load.image('testStateOutsideTiles', 'assets/tilesets/test-tiles-outside.png');
 	game.load.image('player', 'assets/graphics/test-player.png');
 	game.load.image('enemy1', 'assets/graphics/enemy1.png');
+	game.load.image('enemy2', 'assets/graphics/enemy2.png');
 };
 
 testStateOutside.prototype.create = function()
@@ -111,9 +112,9 @@ testStateOutside.prototype.create = function()
 
 	//Setup player
 	this.player = game.add.sprite(176, 96, 'player');
-	game.physics.enable(this.player,Phaser.Physics.ARCADE);
-	this.player.body.setSize(32, 32, 0, 32);
-	game.physics.arcade.collide(this.player, this.layer);
+	//game.physics.enable(this.player,Phaser.Physics.ARCADE);
+	//this.player.body.setSize(32, 32, 0, 32);
+	//game.physics.arcade.collide(this.player, this.layer);
 	game.camera.follow(this.player);
 	
 	//setup the input
@@ -127,25 +128,39 @@ testStateOutside.prototype.create = function()
 	this.mapEntities = game.add.group();
 	this.mapEntities.sort();
 	this.mapEntities.add(this.player);
+	this.mapEntities.player = this.player;
+	
+	this.map.createFromObjects('Object Layer 1', 15, 'enemy1', '', true, false, this.mapEntities);
 
-this.enemy = game.add.sprite(192, 242, 'enemy1');
-game.physics.enable(this.enemy,Phaser.Physics.ARCADE);
-this.enemy.body.setSize(32, 32, 0, 32);
-this.mapEntities.add(this.enemy);
-this.enemy.state = 'waiting';
-this.enemy.searchX = this.enemy.x;
-this.enemy.searchY = this.enemy.y;
+	console.log(this.mapEntities.children);
+	for (var i = 0; i < this.mapEntities.children.length; i++)
+	{
+		game.physics.enable(this.mapEntities.getAt(i),Phaser.Physics.ARCADE);
+		this.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
+
+		if (this.mapEntities.getAt(i).key == 'enemy1')
+		{
+			this.mapEntities.getAt(i).state = 'waiting';
+			this.mapEntities.getAt(i).searchX = this.mapEntities.getAt(i).x;
+			this.mapEntities.getAt(i).searchY = this.mapEntities.getAt(i).y;
+			this.mapEntities.getAt(i).stepInsideAi = enemy1Ai;
+		}
+
+	}
+
 };
 
 testStateOutside.prototype.update = function()
 {
-	game.physics.arcade.collide(this.player, this.layer);
-game.physics.arcade.collide(this.enemy, this.layer);
-	//this.player.body.velocity.x = 150;
+	game.physics.arcade.collide(this.mapEntities, this.mapEntities);
+	game.physics.arcade.collide(this.mapEntities, this.layer);
+
+	this.mapEntities.setAll('body.velocity.x',0);
+	this.mapEntities.setAll('body.velocity.y',0);
 
 	//player movement and input
-	this.player.body.velocity.x = 0;
-	this.player.body.velocity.y = 0;
+	//this.player.body.velocity.x = 0;
+	//this.player.body.velocity.y = 0;
 	if(this.input.upKey.isDown)
 	{
 		this.player.body.velocity.y = -120;
@@ -165,76 +180,81 @@ game.physics.arcade.collide(this.enemy, this.layer);
 
 	if (this.input.confirmKey.isDown)
 	{
-		console.log(this.enemy);
 	}
-
-this.pointToPlayer = game.math.angleBetween(this.enemy.x, this.enemy.y,this.player.x, this.player.y);
 
 	/*Keep the position as intergers to make the rendering not blur out*/
 	this.player.body.x = Math.round(this.player.body.x);
 	this.player.body.y = Math.round(this.player.body.y);
 
 	//Update Entities
-this.enemy.body.velocity.x = 0;
-this.enemy.body.velocity.y = 0;
-
-if (this.enemy.state == 'waiting')
-{
-	//if player found
-	if (Phaser.Math.distance(this.player.x,this.player.y,this.enemy.x,this.enemy.y) < 300)
-	{
-		this.enemy.state = 'hunting';
-	}
-}
-
-if (this.enemy.state == 'searching')
-{
-	//if player lost, search last known location
-	this.enemy.body.velocity.x = Math.sin(game.math.angleBetween(this.enemy.x, this.enemy.y,this.enemy.searchX, this.enemy.searchY)) * 30;
-	this.enemy.body.velocity.y = Math.cos(game.math.angleBetween(this.enemy.x, this.enemy.y,this.enemy.searchX, this.enemy.searchY)) * 30;
-
-	//if done searching
-	if (Phaser.Math.distance(this.enemy.x,this.enemy.y,this.enemy.searchX,this.enemy.searchY) < 10)
-	{
-		this.enemy.state = 'waiting';
-	}
-
-	//if player found
-	if (Phaser.Math.distance(this.player.x,this.player.y,this.enemy.x,this.enemy.y) < 300)
-	{
-		this.enemy.state = 'hunting';
-	}
-}
-
-if (this.enemy.state == 'hunting')
-{
-	this.enemy.body.velocity.x = Math.sin(game.math.angleBetween(this.enemy.x, this.enemy.y,this.player.x, this.player.y)) * 30;
-	this.enemy.body.velocity.y = Math.cos(game.math.angleBetween(this.enemy.x, this.enemy.y,this.player.x, this.player.y)) * 30;
-
-	if (Phaser.Math.distance(this.player.x,this.player.y,this.enemy.x,this.enemy.y) > 350)
-	{
-		this.enemy.state = 'searching';
-		this.enemy.searchX = this.player.x;
-		this.enemy.searchY = this.player.y;
-	}
-}
+	this.mapEntities.callAll('stepInsideAi');
 
 	//Do the depth sort
 	this.mapEntities.sort('y', Phaser.Group.SORT_ASCENDING);
-
-	
-
 };
 
 
 testStateOutside.prototype.render = function()
 {
-	game.debug.body(this.player);
-	game.debug.body(this.enemy);
-	game.debug.text(this.enemy.state, 100, 380 );
+	for (var i = 0; i < this.mapEntities.children.length; i++)
+	{
+		game.debug.body(this.mapEntities.getAt(i));
+
+		if (this.mapEntities.getAt(i).key == 'enemy1')
+		{
+			game.debug.text(this.mapEntities.getAt(i).state, 100, 380 );
+		}
+	}
+	//game.debug.body(this.player);
+	//game.debug.body(this.enemy);
+	//game.debug.text(this.enemy.state, 100, 380 );
 	//game.debug.body(this.layer);
 	//game.debug.cameraInfo(game.camera, 32, 32);
 };
+
+function enemy1Ai()
+{
+	if (this.state == 'waiting')
+	{
+		//if target found
+		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+		{
+			this.state = 'hunting';
+		}
+	}
+
+	if (this.state == 'searching')
+	{
+		//if target lost, search last known location
+		this.body.velocity.x = Math.sin(game.math.angleBetween(this.x, this.y,this.searchX, this.searchY)) * 30;
+		this.body.velocity.y = Math.cos(game.math.angleBetween(this.x, this.y,this.searchX, this.searchY)) * 30;
+
+		//if done searching
+		if (Phaser.Math.distance(this.x,this.y,this.searchX,this.searchY) < 10)
+		{
+			this.state = 'waiting';
+		}
+
+		//if target found
+		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+		{
+			this.state = 'hunting';
+		}
+	}
+
+	if (this.state == 'hunting')
+	{
+		this.body.velocity.x = Math.sin(game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y)) * 30;
+		this.body.velocity.y = Math.cos(game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y)) * 30;
+
+		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) > 350)
+		{
+			this.state = 'searching';
+			this.searchX = this.parent.player.x;
+			this.searchY = this.parent.player.y;
+		}
+	}
+}
 
 //game.state.add('game', testState, true);
 game.state.add('game', testStateOutside, true);

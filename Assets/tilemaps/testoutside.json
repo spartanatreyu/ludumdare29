@@ -16,46 +16,32 @@
          "name":"Object Layer 1",
          "objects":[
                 {
-                 "gid":13,
+                 "gid":15,
                  "height":0,
-                 "name":"",
+                 "name":"asdf",
                  "properties":
                     {
 
                     },
-                 "type":"",
+                 "type":"qwerty",
                  "visible":true,
                  "width":0,
-                 "x":160,
-                 "y":224
-                }, 
-                {
-                 "gid":14,
-                 "height":0,
-                 "name":"",
-                 "properties":
-                    {
-
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":512,
-                 "y":288
-                }, 
-                {
-                 "gid":14,
-                 "height":0,
-                 "name":"",
-                 "properties":
-                    {
-
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":800,
+                 "x":224,
                  "y":256
+                }, 
+                {
+                 "gid":15,
+                 "height":0,
+                 "name":"",
+                 "properties":
+                    {
+
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":128,
+                 "y":352
                 }],
          "opacity":1,
          "type":"objectgroup",
