@@ -1,0 +1,5 @@
+{
+  "undef": true,
+  "unused": true,
+  "globals": { "Phaser": false, "console":false, "alert":false}
+}
