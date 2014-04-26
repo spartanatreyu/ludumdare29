@@ -192,5 +192,5 @@ testStateOutside.prototype.render = function()
 	//game.debug.cameraInfo(game.camera, 32, 32);
 };
 */
-//game.state.add('game', testState, true);
-game.state.add('game', testStateOutside, true);
+game.state.add('game', testState, true);
+//game.state.add('game', testStateOutside, true);
