@@ -105,7 +105,7 @@ testStateOutside.prototype.create = function()
 	//Setup Level
 	this.map = game.add.tilemap('testStateOutsideLevel');
 	this.map.addTilesetImage('test-tiles-outside', 'testStateOutsideTiles', 32, 32);
-	this.map.setCollision([1,2,3]);
+	this.map.setCollision([1,2,3,5]);
 
 	this.layer = this.map.createLayer(0);
 	this.layer.resizeWorld();
@@ -196,7 +196,7 @@ testStateOutside.prototype.update = function()
 
 testStateOutside.prototype.render = function()
 {
-	for (var i = 0; i < this.mapEntities.children.length; i++)
+	/*for (var i = 0; i < this.mapEntities.children.length; i++)
 	{
 		game.debug.body(this.mapEntities.getAt(i));
 
@@ -204,11 +204,8 @@ testStateOutside.prototype.render = function()
 		{
 			game.debug.text(this.mapEntities.getAt(i).state, 100, 380 );
 		}
-	}
+	}*/
 	//game.debug.body(this.player);
-	//game.debug.body(this.enemy);
-	//game.debug.text(this.enemy.state, 100, 380 );
-	//game.debug.body(this.layer);
 	//game.debug.cameraInfo(game.camera, 32, 32);
 };
 
