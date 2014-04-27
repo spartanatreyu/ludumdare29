@@ -3,6 +3,13 @@
 
 var game = new Phaser.Game(640, 480, Phaser.AUTO, 'game');
 
+//setup the input
+var upKey;
+var downKey;
+var leftKey;
+var rightKey;
+var confirmKey;
+
 /*TEST STATE*//*
 var testState = function(){};
 
@@ -96,6 +103,7 @@ testStateOutside.prototype.preload = function()
 	game.load.image('player', 'assets/graphics/test-player.png');
 	game.load.image('enemy1', 'assets/graphics/enemy1.png');
 	game.load.image('enemy2', 'assets/graphics/enemy2.png');
+	game.load.spritesheet('swing-attack', 'assets/graphics/swing-attack.png',48,48);
 };
 
 testStateOutside.prototype.create = function()
@@ -112,17 +120,17 @@ testStateOutside.prototype.create = function()
 
 	//Setup player
 	this.player = game.add.sprite(176, 96, 'player');
-	//game.physics.enable(this.player,Phaser.Physics.ARCADE);
-	//this.player.body.setSize(32, 32, 0, 32);
-	//game.physics.arcade.collide(this.player, this.layer);
+	this.player.attackCountdown = 0;
+	this.player.stepInsideEntity = playerStep;
+	this.player.health = 400;
 	game.camera.follow(this.player);
 	
 	//setup the input
-	this.input.upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-	this.input.downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
-	this.input.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-	this.input.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-	this.input.confirmKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
+	upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+	downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+	leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+	rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+	confirmKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 
 	//setup map entities
 	this.mapEntities = game.add.group();
@@ -132,7 +140,7 @@ testStateOutside.prototype.create = function()
 	
 	this.map.createFromObjects('Object Layer 1', 15, 'enemy1', '', true, false, this.mapEntities);
 
-	console.log(this.mapEntities.children);
+	//console.log(this.mapEntities.children);
 	for (var i = 0; i < this.mapEntities.children.length; i++)
 	{
 		game.physics.enable(this.mapEntities.getAt(i),Phaser.Physics.ARCADE);
@@ -143,51 +151,52 @@ testStateOutside.prototype.create = function()
 			this.mapEntities.getAt(i).state = 'waiting';
 			this.mapEntities.getAt(i).searchX = this.mapEntities.getAt(i).x;
 			this.mapEntities.getAt(i).searchY = this.mapEntities.getAt(i).y;
-			this.mapEntities.getAt(i).stepInsideAi = enemy1Ai;
+			this.mapEntities.getAt(i).stepInsideEntity = enemy1Step;
+			this.mapEntities.getAt(i).health = 20;
 		}
 
 	}
+
+	//console.log(this.mapEntities);
 
 };
 
 testStateOutside.prototype.update = function()
 {
-	game.physics.arcade.collide(this.mapEntities, this.mapEntities);
+	game.physics.arcade.collide(this.mapEntities, this.mapEntities,function(left,right)
+	{
+		//player and enemy attacks
+		if(left.key === 'enemy1' && right.key === 'player')
+		{
+			right.health--;
+		}
+
+		if(left.key === 'player' && right.key === 'enemy1')
+		{
+			left.health--;
+		}
+	});
+	game.physics.arcade.overlap(this.mapEntities, this.mapEntities,function(left,right)
+	{
+		//enemy and player attacks
+		if(left.key === 'enemy1' && right.key === 'swing-attack')
+		{
+			left.health--;
+		}
+
+		if(left.key === 'swing-attack' && right.key === 'enemy1')
+		{
+			right.health--;
+		}
+	});
+	//game.physics.arcade.collide(this.mapEntities, this.swingAttack, function(left,right){console.log('attack hit');left.kill();});
 	game.physics.arcade.collide(this.mapEntities, this.layer);
 
 	this.mapEntities.setAll('body.velocity.x',0);
 	this.mapEntities.setAll('body.velocity.y',0);
 
-	//player movement and input
-	//this.player.body.velocity.x = 0;
-	//this.player.body.velocity.y = 0;
-	if(this.input.upKey.isDown)
-	{
-		this.player.body.velocity.y = -120;
-	}
-	else if (this.input.downKey.isDown)
-	{
-		this.player.body.velocity.y = 120;
-	}
-	if(this.input.leftKey.isDown)
-	{
-		this.player.body.velocity.x = -120;
-	}
-	else if (this.input.rightKey.isDown)
-	{
-		this.player.body.velocity.x = 120;
-	}
-
-	if (this.input.confirmKey.isDown)
-	{
-	}
-
-	/*Keep the position as intergers to make the rendering not blur out*/
-	this.player.body.x = Math.round(this.player.body.x);
-	this.player.body.y = Math.round(this.player.body.y);
-
-	//Update Entities
-	this.mapEntities.callAll('stepInsideAi');
+	//Update Entities stepInsideAi
+	this.mapEntities.callAll('stepInsideEntity');
 
 	//Do the depth sort
 	this.mapEntities.sort('y', Phaser.Group.SORT_ASCENDING);
@@ -200,16 +209,180 @@ testStateOutside.prototype.render = function()
 	{
 		game.debug.body(this.mapEntities.getAt(i));
 
-		if (this.mapEntities.getAt(i).key == 'enemy1')
-		{
-			game.debug.text(this.mapEntities.getAt(i).state, 100, 380 );
-		}
-	}*/
-	//game.debug.body(this.player);
+		//if (this.mapEntities.getAt(i).key == 'enemy1')
+		//{
+		//	game.debug.text(this.mapEntities.getAt(i).state, 100, 380 );
+		//}
+	}/**/
 	//game.debug.cameraInfo(game.camera, 32, 32);
+	
+	game.debug.text(this.player.health, 30, 30 );
 };
 
-function enemy1Ai()
+function playerStep()
+{
+	if (this.attackCountdown > 0)
+	{
+		this.attackCountdown--;
+	}
+
+	//player movement and input
+	//this.player.body.velocity.x = 0;
+	//this.player.body.velocity.y = 0;
+	if(upKey.isDown)
+	{
+		this.body.velocity.y = -120;
+	}
+	else if (downKey.isDown)
+	{
+		this.body.velocity.y = 120;
+	}
+	if(leftKey.isDown)
+	{
+		this.body.velocity.x = -120;
+	}
+	else if (rightKey.isDown)
+	{
+		this.body.velocity.x = 120;
+	}
+
+	if (confirmKey.isDown && this.attackCountdown === 0)
+	{
+		
+		//up
+		if(upKey.isDown && !leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x-8, this.y-24, 'swing-attack',0);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//up-right
+		if(upKey.isDown && !leftKey.isDown && rightKey.isDown && !downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x+16, this.y-12, 'swing-attack',1);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//right
+		if(!upKey.isDown && !leftKey.isDown && rightKey.isDown && !downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x+24, this.y+16, 'swing-attack',2);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//down-right
+		if(!upKey.isDown && !leftKey.isDown && rightKey.isDown && downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x+16, this.y+36, 'swing-attack',3);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//down
+		if(!upKey.isDown && !leftKey.isDown && !rightKey.isDown && downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x-8, this.y+48, 'swing-attack',4);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//down-left
+		if(!upKey.isDown && leftKey.isDown && !rightKey.isDown && downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x-28, this.y+36, 'swing-attack',5);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//left
+		if(!upKey.isDown && leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x-40, this.y+16, 'swing-attack',6);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}
+		
+		//up-left
+		if(upKey.isDown && leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+		{
+			var attack = game.add.sprite(this.x-32, this.y-12, 'swing-attack',7);
+			attack.healthValue = 10;
+			game.physics.enable(attack,Phaser.Physics.ARCADE);
+			attack.body.immovable = true;
+			attack.stepInsideEntity = swingAttack;
+			this.parent.add(attack);
+
+			this.attackCountdown = 30;
+		}		
+	}
+
+	//so you don't run through enemies and spam attack
+	if (this.attackCountdown > 20)
+	{
+		this.body.velocity.x = 0;
+		this.body.velocity.y = 0;
+	}
+
+	/*Keep the position as intergers to make the rendering not blur out*/
+	this.body.x = Math.round(this.body.x);
+	this.body.y = Math.round(this.body.y);
+
+	if (this.health < 1)
+	{
+		console.log('player dead');
+		this.destroy();
+	}
+}
+
+function swingAttack()
+{
+	if (this.healthValue === 0)
+	{
+		this.destroy();
+	}
+
+	this.healthValue--;
+}
+
+function enemy1Step()
 {
 	if (this.state == 'waiting')
 	{
@@ -250,6 +423,12 @@ function enemy1Ai()
 			this.searchX = this.parent.player.x;
 			this.searchY = this.parent.player.y;
 		}
+	}
+
+	if (this.health < 1)
+	{
+		console.log('enemy1 dead');
+		this.destroy();
 	}
 }
 
