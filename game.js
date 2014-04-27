@@ -3,6 +3,7 @@
 
 var game = new Phaser.Game(640, 480, Phaser.AUTO, 'game');
 
+
 //setup the input
 var upKey;
 var downKey;
@@ -194,6 +195,7 @@ testStateOutside.prototype.create = function()
 	this.graphicsObject.fixedToCamera = true;
 	this.graphicsObject.cameraOffset.x = 0;
 	this.graphicsObject.cameraOffset.y = 0;
+	console.log(this.graphicsObject);
 
 };
 
@@ -274,9 +276,10 @@ testStateOutside.prototype.update = function()
 	//update text
 	this.displayText.setText('Health:\nArrows to move, \'Z\' to attack');
 	this.graphicsObject.clear();
-	this.graphicsObject.beginFill(0x2c8336);
+	this.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(this.player.health/1200,0.45,0.65)));
 	this.graphicsObject.drawRect(100, 18, 400, 18);
-	this.graphicsObject.beginFill(0x3fd150);
+	this.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(this.player.health/1200,0.85,0.65)));
+	//this.graphicsObject.beginFill('');
 	this.graphicsObject.drawRect(100, 18, this.player.health, 18);
 
 };
@@ -587,6 +590,44 @@ function enemy2Step()
 		this.destroy();
 	}
 }
+
+//Colour conversion used for the health bar, WHY IS THIS NOT BUILT INTO PHASER?
+function hue2rgb(p, q, t){
+    if(t < 0) t += 1;
+    if(t > 1) t -= 1;
+    if(t < 1/6) return p + (q - p) * 6 * t;
+    if(t < 1/2) return q;
+    if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+}
+//0.33,0.85,0.65
+function hslToRgb(h, s, l)
+{
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbArrayToHex(rgbArray) {
+    return "0x" + componentToHex(rgbArray[0]) + componentToHex(rgbArray[1]) + componentToHex(rgbArray[2]);
+}
+
+//120, 85,85
 
 //game.state.add('game', testState, true);
 game.state.add('game', testStateOutside, true);
