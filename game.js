@@ -12,7 +12,7 @@ var confirmKey;
 var global = {};
 
 game.cutscene = null;
-game.trigger = null;
+global.trigger = null;
 game.showDebugging = false;
 
 /*TEST STATE Outside*/
@@ -37,7 +37,7 @@ launchpadLanding.prototype.create = function()
 	//Setup Level
 	this.map = game.add.tilemap('launchpadLandingLevel');
 	this.map.addTilesetImage('outline-tiles', 'launchpadLandingTiles', 32, 32);
-	this.map.setCollision([1,2,3,5]);
+	this.map.setCollision([1,2,3,5,6,7,8,9,10,11]);
 
 	this.layer = this.map.createLayer(0);
 	this.layer.resizeWorld();
@@ -252,11 +252,11 @@ function standardUpdate(that)
 		//player and trigger
 		if(left.key === 'trigger' && right.key === 'player')
 		{
-			game.trigger = left;
+			global.trigger = left;
 		}
 		if(left.key === 'player' && right.key === 'trigger')
 		{
-			game.trigger = right;
+			global.trigger = right;
 		}
 
 		//player and health
@@ -331,57 +331,57 @@ function standardUpdate(that)
 	}
 
 	//Do cutscene stuff if there is a cutscene
-	if(game.trigger !== null)
+	if(global.trigger !== null)
 	{
-		if (game.trigger.todo === undefined)
+		if (global.trigger.todo === undefined)
 		{
-			game.trigger.todo = eval(game.trigger.actions);
+			global.trigger.todo = eval(global.trigger.actions);
 			game.cutscene = true;
-			game.trigger.waiting = false;
+			global.trigger.waiting = false;
 		}
 
-		if (game.trigger.todo !== undefined)
+		if (global.trigger.todo !== undefined)
 		{
-			if (game.trigger.todo.length > 0)
+			if (global.trigger.todo.length > 0)
 			{
 				//if the next action is a message
-				if (game.trigger.todo[0].message)
+				if (global.trigger.todo.length !== 0 && global.trigger.todo[0].message)
 				{
-					if(game.trigger.waiting === false)
+					if(global.trigger.waiting === false)
 					{
-						game.trigger.waiting = true;
+						global.trigger.waiting = true;
 					}
-					if(game.trigger.waiting === true)
+					if(global.trigger.waiting === true)
 					{
 						//that.graphicsObject.beginFill(0x000000);
 						//that.graphicsObject.drawRect(0, 410, 630, 100);
-						that.displayText.setText(game.trigger.todo[0].message);
+						that.displayText.setText(global.trigger.todo[0].message);
 						that.displayText.cameraOffset.x = 20;
 						that.displayText.cameraOffset.y = 420;
 
 						if (confirmKey.isDown && confirmKey.repeats === 0)
 						{
-							game.trigger.todo.shift();
-							game.trigger.waiting = false;
+							global.trigger.todo.shift();
+							global.trigger.waiting = false;
 						}	
 					}
 				}
 
 				//if the next action is change level
-				if (game.trigger.todo[0].switchLevel)
+				if (global.trigger.todo.length !== 0 && global.trigger.todo[0].switchLevel)
 				{
-					var temp = game.trigger.todo[0].switchLevel;
-					game.trigger.todo.shift();
+					var temp = global.trigger.todo[0].switchLevel;
+					global.trigger.todo.shift();
 					game.state.add('game', eval(temp), true);
 				}
 			}
 			
-			if (game.trigger.todo.length === 0)
+			if (global.trigger.todo.length === 0)
 			{
 				//game.cutscene.destroy();
 				game.cutscene = null;
-				game.trigger.destroy();
-				game.trigger = null;
+				global.trigger.destroy();
+				global.trigger = null;
 			}
 		}
 	}
