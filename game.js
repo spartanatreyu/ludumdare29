@@ -9,10 +9,46 @@ var downKey;
 var leftKey;
 var rightKey;
 var confirmKey;
+var global = {};
 
 game.cutscene = null;
 game.trigger = null;
 game.showDebugging = false;
+
+/*TEST STATE Outside*/
+var launchpadLanding = function(){};
+
+launchpadLanding.prototype.preload = function()
+{
+	game.load.tilemap('launchpadLandingLevel', 'assets/tilemaps/launchpad-landing.json', null, Phaser.Tilemap.TILED_JSON);
+	game.load.image('launchpadLandingTiles', 'assets/tilesets/outline-tiles.png');
+	game.load.image('player', 'assets/graphics/test-player.png');
+	game.load.image('enemy1', 'assets/graphics/enemy1.png');
+	game.load.image('enemy2', 'assets/graphics/enemy2.png');
+	game.load.image('trigger', 'assets/graphics/trigger.png');
+	game.load.image('medpack', 'assets/graphics/medpack.png');
+	game.load.spritesheet('swing-attack', 'assets/graphics/swing-attack.png',48,48);
+};
+
+launchpadLanding.prototype.create = function()
+{
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	
+	//Setup Level
+	this.map = game.add.tilemap('launchpadLandingLevel');
+	this.map.addTilesetImage('outline-tiles', 'launchpadLandingTiles', 32, 32);
+	this.map.setCollision([1,2,3,5]);
+
+	this.layer = this.map.createLayer(0);
+	this.layer.resizeWorld();
+
+	standardCreate(this);
+};
+
+launchpadLanding.prototype.update = function()
+{
+	standardUpdate(this);
+};
 
 /*TEST STATE Outside*/
 var testState = function(){};
@@ -335,7 +371,6 @@ function standardUpdate(that)
 				if (game.trigger.todo[0].switchLevel)
 				{
 					var temp = game.trigger.todo[0].switchLevel;
-					console.log(game.trigger.todo[0].switchLevel)
 					game.trigger.todo.shift();
 					game.state.add('game', eval(temp), true);
 				}
@@ -692,4 +727,5 @@ function rgbArrayToHex(rgbArray) {
 }
 
 //game.state.add('game', testState, true);
-game.state.add('game', testStateOutside, true);
+//game.state.add('game', testStateOutside, true);
+game.state.add('game', launchpadLanding, true);
