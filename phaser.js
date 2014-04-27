@@ -16466,6 +16466,11 @@ Phaser.Group.prototype.callbackFromArray = function (child, callback, length) {
 
     //  Kinda looks like a Christmas tree
 
+    if (child == undefined)
+    {
+        return false;
+    }
+
     if (length == 1)
     {
         if (child[callback[0]])
