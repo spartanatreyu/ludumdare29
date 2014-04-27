@@ -3,7 +3,6 @@
 
 var game = new Phaser.Game(640, 480, Phaser.AUTO, 'game');
 
-
 //setup the input
 var upKey;
 var downKey;
@@ -11,88 +10,9 @@ var leftKey;
 var rightKey;
 var confirmKey;
 
-/*TEST STATE*//*
-var testState = function(){};
-
-testState.prototype.preload = function()
-{
-	game.load.tilemap('testStateLevel', 'assets/tilemaps/test.json', null, Phaser.Tilemap.TILED_JSON);
-	game.load.image('testStateTiles', 'assets/tilesets/test-tiles.png');
-	game.load.image('player', 'assets/graphics/test-player.png');
-};
-
-testState.prototype.create = function()
-{
-	game.physics.startSystem(Phaser.Physics.ARCADE);
-	
-	this.map = game.add.tilemap('testStateLevel');
-	this.map.addTilesetImage('test-tiles', 'testStateTiles', 32, 32);
-	this.map.setCollision([1,2,3]);
-
-	this.layer = this.map.createLayer(0);
-	this.layer.resizeWorld();
-
-	this.player = game.add.sprite(144, 128, 'player');
-	game.physics.enable(this.player,Phaser.Physics.ARCADE);
-	//this.player.anchor.set(0.5);
-	this.player.body.setSize(32, 32, 0, 32);
-	game.physics.arcade.collide(this.player, this.layer);
-	game.camera.follow(this.player);
-	
-	//setup the input
-	this.input.upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-	this.input.downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
-	this.input.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-	this.input.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-	this.input.confirmKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
-};
-
-testState.prototype.update = function()
-{
-	game.physics.arcade.collide(this.player, this.layer);
-	//this.player.body.velocity.x = 150;
-
-	//player movement and input
-	this.player.body.velocity.x = 0;
-	this.player.body.velocity.y = 0;
-	if(this.input.upKey.isDown)
-	{
-		this.player.body.velocity.y = -120;
-	}
-	else if (this.input.downKey.isDown)
-	{
-		this.player.body.velocity.y = 120;
-	}
-	if(this.input.leftKey.isDown)
-	{
-		this.player.body.velocity.x = -120;
-	}
-	else if (this.input.rightKey.isDown)
-	{
-		this.player.body.velocity.x = 120;
-	}
-
-	if (this.input.confirmKey.isDown)
-	{
-		console.log(this.player);
-	}
-
-	//Keep the position as intergers to make the rendering not blur out
-	this.player.body.x = Math.round(this.player.body.x);
-	this.player.body.y = Math.round(this.player.body.y);
-
-	if (this.player.body.y > 350)
-	{
-		game.state.add('game', testStateOutside, true);
-	}
-};*/
-
-/*testState.prototype.render = function()
-{
-	//game.debug.body(this.player);
-	//game.debug.body(this.layer);
-	//game.debug.cameraInfo(game.camera, 32, 32);
-};*/
+game.cutscene = null;
+game.trigger = null;
+game.showDebugging = false;
 
 /*TEST STATE Outside*/
 var testStateOutside = function(){};
@@ -104,6 +24,7 @@ testStateOutside.prototype.preload = function()
 	game.load.image('player', 'assets/graphics/test-player.png');
 	game.load.image('enemy1', 'assets/graphics/enemy1.png');
 	game.load.image('enemy2', 'assets/graphics/enemy2.png');
+	game.load.image('trigger', 'assets/graphics/trigger.png');
 	game.load.image('medpack', 'assets/graphics/medpack.png');
 	game.load.spritesheet('swing-attack', 'assets/graphics/swing-attack.png',48,48);
 };
@@ -120,9 +41,47 @@ testStateOutside.prototype.create = function()
 	this.layer = this.map.createLayer(0);
 	this.layer.resizeWorld();
 
+	standardCreate(this);
+};
+
+testStateOutside.prototype.update = function()
+{
+	standardUpdate(this);
+};
+
+
+testStateOutside.prototype.render = function()
+{
+	if (game.showDebugging)
+	{
+		for (var i = 0; i < this.mapEntities.children.length; i++)
+		{
+			game.debug.body(this.mapEntities.getAt(i));
+
+			//if (this.mapEntities.getAt(i).key == 'enemy2')
+			//{
+			//	game.debug.text(this.mapEntities.getAt(i).state, 100, 380 );
+			//}
+		}
+	}
+	/**/
+	//game.debug.cameraInfo(game.camera, 32, 32);
+	
+	//game.debug.text('Arrows to move,\'Z\' to attack', 30, 30 );
+	//game.debug.text('Health: '+this.player.health, 30, 50 );
+};
+
+/****************************
+
+END GAME STATES
+
+*****************************/
+
+function standardCreate(that)
+{
 	//Setup player
-	this.player = game.add.sprite(176, 96, 'player');
-	game.camera.follow(this.player);
+	that.player = game.add.sprite(176, 96, 'player');
+	game.camera.follow(that.player);
 	
 	//setup the input
 	upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -132,76 +91,81 @@ testStateOutside.prototype.create = function()
 	confirmKey = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 
 	//setup map entities
-	this.mapEntities = game.add.group();
-	this.mapEntities.sort();
-	this.mapEntities.add(this.player);
-	this.mapEntities.player = this.player;
+	that.mapEntities = game.add.group();
+	that.mapEntities.sort();
+	that.mapEntities.add(that.player);
+	that.mapEntities.player = that.player;
 	
-	this.map.createFromObjects('Object Layer 1', 12, 'medpack', '', true, false, this.mapEntities);
-	this.map.createFromObjects('Object Layer 1', 14, 'enemy1', '', true, false, this.mapEntities);
-	this.map.createFromObjects('Object Layer 1', 15, 'enemy2', '', true, false, this.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 11, 'trigger', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 12, 'medpack', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 14, 'enemy1', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 15, 'enemy2', '', true, false, that.mapEntities);
 
-	for (var i = 0; i < this.mapEntities.children.length; i++)
+	for (var i = 0; i < that.mapEntities.children.length; i++)
 	{
-		game.physics.enable(this.mapEntities.getAt(i),Phaser.Physics.ARCADE);
-		
+		game.physics.enable(that.mapEntities.getAt(i),Phaser.Physics.ARCADE);
 
-		if (this.mapEntities.getAt(i).key == 'player')
+		if (that.mapEntities.getAt(i).key == 'trigger')
 		{
-			this.mapEntities.getAt(i).attackCountdown = 0;
-			this.mapEntities.getAt(i).stepInsideEntity = playerStep;
-			this.mapEntities.getAt(i).health = 400;
-			this.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
+			that.mapEntities.getAt(i).body.setSize(that.mapEntities.getAt(i).triggerWidth, that.mapEntities.getAt(i).triggerHeight, 0, 0);
+			that.mapEntities.getAt(i).body.immovable = true;
+			//that.mapEntities.getAt(i).callTrigger = callTrigger;
 		}
-		if (this.mapEntities.getAt(i).key == 'medpack')
+		if (that.mapEntities.getAt(i).key == 'player')
 		{
-			this.mapEntities.getAt(i).stepInsideEntity = medpackStep;
-			this.mapEntities.getAt(i).body.setSize(32, 32, 0, 0);
-			this.mapEntities.getAt(i).health = 10;
+			that.mapEntities.getAt(i).attackCountdown = 0;
+			that.mapEntities.getAt(i).stepInsideEntity = playerStep;
+			that.mapEntities.getAt(i).health = 400;
+			that.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
 		}
-		if (this.mapEntities.getAt(i).key == 'enemy1')
+		if (that.mapEntities.getAt(i).key == 'medpack')
 		{
-			this.mapEntities.getAt(i).state = 'waiting';
-			this.mapEntities.getAt(i).searchX = this.mapEntities.getAt(i).x;
-			this.mapEntities.getAt(i).searchY = this.mapEntities.getAt(i).y;
-			this.mapEntities.getAt(i).stepInsideEntity = enemy1Step;
-			this.mapEntities.getAt(i).health = 20;
-			this.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
+			that.mapEntities.getAt(i).stepInsideEntity = medpackStep;
+			that.mapEntities.getAt(i).body.setSize(32, 32, 0, 0);
+			that.mapEntities.getAt(i).health = 10;
+		}
+		if (that.mapEntities.getAt(i).key == 'enemy1')
+		{
+			that.mapEntities.getAt(i).state = 'waiting';
+			that.mapEntities.getAt(i).searchX = that.mapEntities.getAt(i).x;
+			that.mapEntities.getAt(i).searchY = that.mapEntities.getAt(i).y;
+			that.mapEntities.getAt(i).stepInsideEntity = enemy1Step;
+			that.mapEntities.getAt(i).health = 20;
+			that.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
 		}
 
-		if (this.mapEntities.getAt(i).key == 'enemy2')
+		if (that.mapEntities.getAt(i).key == 'enemy2')
 		{
-			this.mapEntities.getAt(i).state = 'waiting';
-			this.mapEntities.getAt(i).searchX = this.mapEntities.getAt(i).x;
-			this.mapEntities.getAt(i).searchY = this.mapEntities.getAt(i).y;
-			this.mapEntities.getAt(i).jumpCountdown = 0;
-			this.mapEntities.getAt(i).jumpAngle = 0;
-			this.mapEntities.getAt(i).jumpX = 0;
-			this.mapEntities.getAt(i).jumpY = 0;
-			this.mapEntities.getAt(i).stepInsideEntity = enemy2Step;
-			this.mapEntities.getAt(i).health = 60;
-			this.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
+			that.mapEntities.getAt(i).state = 'waiting';
+			that.mapEntities.getAt(i).searchX = that.mapEntities.getAt(i).x;
+			that.mapEntities.getAt(i).searchY = that.mapEntities.getAt(i).y;
+			that.mapEntities.getAt(i).jumpCountdown = 0;
+			that.mapEntities.getAt(i).jumpAngle = 0;
+			that.mapEntities.getAt(i).jumpX = 0;
+			that.mapEntities.getAt(i).jumpY = 0;
+			that.mapEntities.getAt(i).stepInsideEntity = enemy2Step;
+			that.mapEntities.getAt(i).health = 60;
+			that.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
 		}
 
 	}
 
 	//setup hud
-	this.displayText = game.add.text(20, 20, 'Health:\nArrows to move, \'Z\' to attack',{ font: '16px Courier', fill: '#FFFFFF', align: 'left' });
-	this.displayText.fixedToCamera = true;
-	this.displayText.cameraOffset.x = 20;
-	this.displayText.cameraOffset.y = 20;
+	that.displayText = game.add.text(20, 20, 'Health:\nArrows to move, \'Z\' to attack',{ font: '16px Courier', fill: '#FFFFFF', align: 'left' });
+	that.displayText.fixedToCamera = true;
+	that.displayText.cameraOffset.x = 20;
+	that.displayText.cameraOffset.y = 20;
 
-	this.graphicsObject = game.add.graphics(0,0);
-	this.graphicsObject.fixedToCamera = true;
-	this.graphicsObject.cameraOffset.x = 0;
-	this.graphicsObject.cameraOffset.y = 0;
-	console.log(this.graphicsObject);
+	that.graphicsObject = game.add.graphics(0,0);
+	that.graphicsObject.fixedToCamera = true;
+	that.graphicsObject.cameraOffset.x = 0;
+	that.graphicsObject.cameraOffset.y = 0;
+}
 
-};
-
-testStateOutside.prototype.update = function()
+function standardUpdate(that)
 {
-	game.physics.arcade.collide(this.mapEntities, this.mapEntities,function(left,right)
+	//Check all Collisions
+	game.physics.arcade.collide(that.mapEntities, that.mapEntities,function(left,right)
 	{
 		//player and enemy attacks
 		if((left.key === 'enemy1' || left.key === 'enemy2' || left.key === 'enemy3') && right.key === 'player')
@@ -214,6 +178,16 @@ testStateOutside.prototype.update = function()
 			left.health--;
 		}
 
+		//player and trigger
+		if(left.key === 'trigger' && right.key === 'player')
+		{
+			game.trigger = left;
+		}
+		if(left.key === 'player' && right.key === 'trigger')
+		{
+			game.trigger = right;
+		}
+
 		//player and health
 		if(left.key === 'medpack' && right.key === 'player')
 		{
@@ -224,8 +198,6 @@ testStateOutside.prototype.update = function()
 			}
 			left.health = 0;
 		}
-
-		//player and health
 		if(left.key === 'player' && right.key === 'medpack')
 		{
 			left.health+= 100;
@@ -236,7 +208,7 @@ testStateOutside.prototype.update = function()
 			right.health = 0;
 		}
 	});
-	game.physics.arcade.overlap(this.mapEntities, this.mapEntities,function(left,right)
+	game.physics.arcade.overlap(that.mapEntities, that.mapEntities,function(left,right)
 	{
 		//enemy and player attacks
 		if((left.key === 'enemy1' || left.key === 'enemy2' || left.key === 'enemy3') && right.key === 'swing-attack')
@@ -261,188 +233,226 @@ testStateOutside.prototype.update = function()
 		}
 
 	});
-	//game.physics.arcade.collide(this.mapEntities, this.swingAttack, function(left,right){console.log('attack hit');left.kill();});
-	game.physics.arcade.collide(this.mapEntities, this.layer);
+	game.physics.arcade.collide(that.mapEntities, that.layer);
 
-	this.mapEntities.setAll('body.velocity.x',0);
-	this.mapEntities.setAll('body.velocity.y',0);
+	//reset all movement
+	that.mapEntities.setAll('body.velocity.x',0);
+	that.mapEntities.setAll('body.velocity.y',0);
 
-	//Update Entities stepInsideAi
-	this.mapEntities.callAll('stepInsideEntity');
+	//Update all Entities
+	that.mapEntities.callAll('stepInsideEntity');
 
 	//Do the depth sort
-	this.mapEntities.sort('y', Phaser.Group.SORT_ASCENDING);
+	that.mapEntities.sort('y', Phaser.Group.SORT_ASCENDING);
 
-	//update text
-	this.displayText.setText('Health:\nArrows to move, \'Z\' to attack');
-	this.graphicsObject.clear();
-	this.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(this.player.health/1200,0.45,0.65)));
-	this.graphicsObject.drawRect(100, 18, 400, 18);
-	this.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(this.player.health/1200,0.85,0.65)));
-	//this.graphicsObject.beginFill('');
-	this.graphicsObject.drawRect(100, 18, this.player.health, 18);
-
-};
-
-
-testStateOutside.prototype.render = function()
-{
-	
-	/*for (var i = 0; i < this.mapEntities.children.length; i++)
+	//update hud
+	that.graphicsObject.clear();
+	if (game.cutscene === null)
 	{
-		game.debug.body(this.mapEntities.getAt(i));
+		that.displayText.setText('Health:\nArrows to move, \'Z\' to attack');
+		that.displayText.cameraOffset.x = 20;
+		that.displayText.cameraOffset.y = 20;
+		that.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(that.player.health/1200,0.45,0.65)));
+		that.graphicsObject.drawRect(100, 18, 400, 18);
+		that.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(that.player.health/1200,0.85,0.65)));
+		//that.graphicsObject.beginFill('');
+		that.graphicsObject.drawRect(100, 18, that.player.health, 18);		
+	}
 
-		if (this.mapEntities.getAt(i).key == 'enemy2')
+	//Do cutscene stuff if there is a cutscene
+	if(game.trigger !== null)
+	{
+		if (game.trigger.todo === undefined)
 		{
-			game.debug.text(this.mapEntities.getAt(i).state, 100, 380 );
+			game.trigger.todo = eval(game.trigger.actions);
+			game.cutscene = true;
+			game.trigger.waiting = false;
 		}
-	}/**/
-	//game.debug.cameraInfo(game.camera, 32, 32);
-	
-	//game.debug.text('Arrows to move,\'Z\' to attack', 30, 30 );
-	//game.debug.text('Health: '+this.player.health, 30, 50 );
-};
+
+		if (game.trigger.todo !== undefined)
+		{
+			if (game.trigger.todo.length > 0)
+			{
+				//if the next action is a message
+				if (game.trigger.todo[0].message)
+				{
+					if(game.trigger.waiting === false)
+					{
+						game.trigger.waiting = true;
+					}
+					if(game.trigger.waiting === true)
+					{
+						//that.graphicsObject.beginFill(0x000000);
+						//that.graphicsObject.drawRect(0, 410, 630, 100);
+						that.displayText.setText(game.trigger.todo[0].message);
+						that.displayText.cameraOffset.x = 20;
+						that.displayText.cameraOffset.y = 420;
+
+						if (confirmKey.isDown && confirmKey.repeats === 0)
+						{
+							game.trigger.todo.shift();
+							game.trigger.waiting = false;
+						}	
+					}
+				}
+
+				//if the next action is change level
+			}
+			
+			if (game.trigger.todo.length === 0)
+			{
+				//game.cutscene.destroy();
+				game.cutscene = null;
+				game.trigger.destroy();
+				game.trigger = null;
+			}
+		}
+	}
+}
 
 function playerStep()
 {
-	if (this.attackCountdown > 0)
+	if(game.cutscene === null)
 	{
-		this.attackCountdown--;
-	}
-
-	//player movement and input
-	//this.player.body.velocity.x = 0;
-	//this.player.body.velocity.y = 0;
-	if(upKey.isDown)
-	{
-		this.body.velocity.y = -120;
-	}
-	else if (downKey.isDown)
-	{
-		this.body.velocity.y = 120;
-	}
-	if(leftKey.isDown)
-	{
-		this.body.velocity.x = -120;
-	}
-	else if (rightKey.isDown)
-	{
-		this.body.velocity.x = 120;
-	}
-
-	if (confirmKey.isDown && this.attackCountdown === 0)
-	{
-		
-		//up
-		if(upKey.isDown && !leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+		if (this.attackCountdown > 0)
 		{
-			var attack = game.add.sprite(this.x-8, this.y-24, 'swing-attack',0);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
-
-			this.attackCountdown = 30;
+			this.attackCountdown--;
 		}
-		
-		//up-right
-		if(upKey.isDown && !leftKey.isDown && rightKey.isDown && !downKey.isDown)
-		{
-			var attack = game.add.sprite(this.x+16, this.y-12, 'swing-attack',1);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
 
-			this.attackCountdown = 30;
+		//player movement and input
+		//this.player.body.velocity.x = 0;
+		//this.player.body.velocity.y = 0;
+		if(upKey.isDown)
+		{
+			this.body.velocity.y = -120;
 		}
-		
-		//right
-		if(!upKey.isDown && !leftKey.isDown && rightKey.isDown && !downKey.isDown)
+		else if (downKey.isDown)
 		{
-			var attack = game.add.sprite(this.x+24, this.y+16, 'swing-attack',2);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
-
-			this.attackCountdown = 30;
+			this.body.velocity.y = 120;
 		}
-		
-		//down-right
-		if(!upKey.isDown && !leftKey.isDown && rightKey.isDown && downKey.isDown)
+		if(leftKey.isDown)
 		{
-			var attack = game.add.sprite(this.x+16, this.y+36, 'swing-attack',3);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
-
-			this.attackCountdown = 30;
+			this.body.velocity.x = -120;
 		}
-		
-		//down
-		if(!upKey.isDown && !leftKey.isDown && !rightKey.isDown && downKey.isDown)
+		else if (rightKey.isDown)
 		{
-			var attack = game.add.sprite(this.x-8, this.y+48, 'swing-attack',4);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
-
-			this.attackCountdown = 30;
+			this.body.velocity.x = 120;
 		}
-		
-		//down-left
-		if(!upKey.isDown && leftKey.isDown && !rightKey.isDown && downKey.isDown)
-		{
-			var attack = game.add.sprite(this.x-28, this.y+36, 'swing-attack',5);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
 
-			this.attackCountdown = 30;
+		if (confirmKey.isDown && this.attackCountdown === 0)
+		{
+			//up
+			if(upKey.isDown && !leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x-8, this.y-24, 'swing-attack',0);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//up-right
+			if(upKey.isDown && !leftKey.isDown && rightKey.isDown && !downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x+16, this.y-12, 'swing-attack',1);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//right
+			if(!upKey.isDown && !leftKey.isDown && rightKey.isDown && !downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x+24, this.y+16, 'swing-attack',2);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//down-right
+			if(!upKey.isDown && !leftKey.isDown && rightKey.isDown && downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x+16, this.y+36, 'swing-attack',3);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//down
+			if(!upKey.isDown && !leftKey.isDown && !rightKey.isDown && downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x-8, this.y+48, 'swing-attack',4);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//down-left
+			if(!upKey.isDown && leftKey.isDown && !rightKey.isDown && downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x-28, this.y+36, 'swing-attack',5);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//left
+			if(!upKey.isDown && leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x-40, this.y+16, 'swing-attack',6);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}
+			
+			//up-left
+			if(upKey.isDown && leftKey.isDown && !rightKey.isDown && !downKey.isDown)
+			{
+				var attack = game.add.sprite(this.x-32, this.y-12, 'swing-attack',7);
+				attack.healthValue = 10;
+				game.physics.enable(attack,Phaser.Physics.ARCADE);
+				attack.body.immovable = true;
+				attack.stepInsideEntity = swingAttack;
+				this.parent.add(attack);
+
+				this.attackCountdown = 30;
+			}		
 		}
-		
-		//left
-		if(!upKey.isDown && leftKey.isDown && !rightKey.isDown && !downKey.isDown)
-		{
-			var attack = game.add.sprite(this.x-40, this.y+16, 'swing-attack',6);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
 
-			this.attackCountdown = 30;
+		//so you don't run through enemies and spam attack
+		if (this.attackCountdown > 20)
+		{
+			this.body.velocity.x = 0;
+			this.body.velocity.y = 0;
 		}
-		
-		//up-left
-		if(upKey.isDown && leftKey.isDown && !rightKey.isDown && !downKey.isDown)
-		{
-			var attack = game.add.sprite(this.x-32, this.y-12, 'swing-attack',7);
-			attack.healthValue = 10;
-			game.physics.enable(attack,Phaser.Physics.ARCADE);
-			attack.body.immovable = true;
-			attack.stepInsideEntity = swingAttack;
-			this.parent.add(attack);
 
-			this.attackCountdown = 30;
-		}		
-	}
-
-	//so you don't run through enemies and spam attack
-	if (this.attackCountdown > 20)
-	{
-		this.body.velocity.x = 0;
-		this.body.velocity.y = 0;
 	}
 
 	/*Keep the position as intergers to make the rendering not blur out*/
@@ -457,137 +467,149 @@ function playerStep()
 
 function swingAttack()
 {
-	if (this.healthValue === 0)
+	if(game.cutscene === null)
 	{
-		this.destroy();
-	}
+		if (this.healthValue === 0)
+		{
+			this.destroy();
+		}
 
-	this.healthValue--;
+		this.healthValue--;
+	}
 }
 
 function medpackStep()
 {
-	if (this.health === 0)
+	if(game.cutscene === null)
 	{
-		this.destroy();
+		if (this.health === 0)
+		{
+			this.destroy();
+		}
 	}
 }
 
 function enemy1Step()
 {
-	if (this.state == 'waiting')
+	if(game.cutscene === null)
 	{
-		//if target found
-		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+		if (this.state == 'waiting')
 		{
-			this.state = 'hunting';
-		}
-	}
-
-	if (this.state == 'searching')
-	{
-		//if target lost, search last known location
-		this.body.velocity.x = Math.sin(game.math.angleBetween(this.x, this.y,this.searchX, this.searchY)) * 30;
-		this.body.velocity.y = Math.cos(game.math.angleBetween(this.x, this.y,this.searchX, this.searchY)) * 30;
-
-		//if done searching
-		if (Phaser.Math.distance(this.x,this.y,this.searchX,this.searchY) < 10)
-		{
-			this.state = 'waiting';
+			//if target found
+			if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+			{
+				this.state = 'hunting';
+			}
 		}
 
-		//if target found
-		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+		if (this.state == 'searching')
 		{
-			this.state = 'hunting';
+			//if target lost, search last known location
+			this.body.velocity.x = Math.sin(game.math.angleBetween(this.x, this.y,this.searchX, this.searchY)) * 30;
+			this.body.velocity.y = Math.cos(game.math.angleBetween(this.x, this.y,this.searchX, this.searchY)) * 30;
+
+			//if done searching
+			if (Phaser.Math.distance(this.x,this.y,this.searchX,this.searchY) < 10)
+			{
+				this.state = 'waiting';
+			}
+
+			//if target found
+			if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+			{
+				this.state = 'hunting';
+			}
 		}
-	}
 
-	if (this.state == 'hunting')
-	{
-		this.body.velocity.x = Math.sin(game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y)) * 30;
-		this.body.velocity.y = Math.cos(game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y)) * 30;
-
-		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) > 350)
+		if (this.state == 'hunting')
 		{
-			this.state = 'searching';
-			this.searchX = this.parent.player.x;
-			this.searchY = this.parent.player.y;
-		}
-	}
+			this.body.velocity.x = Math.sin(game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y)) * 30;
+			this.body.velocity.y = Math.cos(game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y)) * 30;
 
-	if (this.health < 1)
-	{
-		this.destroy();
+			if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) > 350)
+			{
+				this.state = 'searching';
+				this.searchX = this.parent.player.x;
+				this.searchY = this.parent.player.y;
+			}
+		}
+
+		if (this.health < 1)
+		{
+			this.destroy();
+		}
 	}
 }
 
 function enemy2Step()
 {
-	if (this.state == 'waiting')
+	if(game.cutscene === null)
 	{
-		//if target found
-		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+		if (this.state == 'waiting')
 		{
-			this.state = 'hunting';
-		}
-	}
-
-	if (this.state == 'searching')
-	{
-		//if target lost, search last known location
-		if (this.jumpCountdown === 0)
-		{
-			this.jumpAngle = game.math.angleBetween(this.x, this.y,this.searchX, this.searchY);
-			this.jumpCountdown = 50;
-
-			this.jumpX = Math.sin(this.jumpAngle) * 400;
-			this.jumpY = Math.cos(this.jumpAngle) * 400;
+			//if target found
+			if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+			{
+				this.state = 'hunting';
+			}
 		}
 
-		//if done searching
-		if (Phaser.Math.distance(this.x,this.y,this.searchX,this.searchY) < 10)
+		if (this.state == 'searching')
 		{
-			this.state = 'waiting';
+			//if target lost, search last known location
+			if (this.jumpCountdown === 0)
+			{
+				this.jumpAngle = game.math.angleBetween(this.x, this.y,this.searchX, this.searchY);
+				this.jumpCountdown = 50;
+
+				this.jumpX = Math.sin(this.jumpAngle) * 400;
+				this.jumpY = Math.cos(this.jumpAngle) * 400;
+			}
+
+			//if done searching
+			if (Phaser.Math.distance(this.x,this.y,this.searchX,this.searchY) < 10)
+			{
+				this.state = 'waiting';
+			}
+
+			//if target found
+			if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+			{
+				this.state = 'hunting';
+			}
 		}
 
-		//if target found
-		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) < 300)
+		if (this.state == 'hunting')
 		{
-			this.state = 'hunting';
-		}
-	}
+			if (this.jumpCountdown < 1)
+			{
+				this.jumpAngle = game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y);
+				this.jumpCountdown = 50;
 
-	if (this.state == 'hunting')
-	{
-		if (this.jumpCountdown < 1)
+				this.jumpX = Math.sin(this.jumpAngle) * 400;
+				this.jumpY = Math.cos(this.jumpAngle) * 400;
+			}
+
+			if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) > 350)
+			{
+				this.state = 'searching';
+				this.searchX = this.parent.player.x;
+				this.searchY = this.parent.player.y;
+			}
+		}
+
+		this.jumpX *= 0.9;
+		this.jumpY *= 0.9;
+
+		this.body.velocity.x = this.jumpX;
+		this.body.velocity.y = this.jumpY;
+
+		this.jumpCountdown--;
+
+		if (this.health < 1)
 		{
-			this.jumpAngle = game.math.angleBetween(this.x, this.y,this.parent.player.x, this.parent.player.y);
-			this.jumpCountdown = 50;
-
-			this.jumpX = Math.sin(this.jumpAngle) * 400;
-			this.jumpY = Math.cos(this.jumpAngle) * 400;
+			this.destroy();
 		}
-
-		if (Phaser.Math.distance(this.parent.player.x,this.parent.player.y,this.x,this.y) > 350)
-		{
-			this.state = 'searching';
-			this.searchX = this.parent.player.x;
-			this.searchY = this.parent.player.y;
-		}
-	}
-
-	this.jumpX *= 0.9;
-	this.jumpY *= 0.9;
-
-	this.body.velocity.x = this.jumpX;
-	this.body.velocity.y = this.jumpY;
-
-	this.jumpCountdown--;
-
-	if (this.health < 1)
-	{
-		this.destroy();
 	}
 }
 
