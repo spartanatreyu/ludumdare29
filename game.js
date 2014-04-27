@@ -183,14 +183,17 @@ testStateOutside.prototype.create = function()
 		}
 
 	}
-	this.displayText = game.add.text(20, 20, 'Arrows to move, \'Z\' to attack\nHealth: '+this.player.health, { font: '16px Courier', fill: '#FFFFFF', align: 'left' });
+
+	//setup hud
+	this.displayText = game.add.text(20, 20, 'Health:\nArrows to move, \'Z\' to attack',{ font: '16px Courier', fill: '#FFFFFF', align: 'left' });
 	this.displayText.fixedToCamera = true;
 	this.displayText.cameraOffset.x = 20;
-    this.displayText.cameraOffset.y = 20;
+	this.displayText.cameraOffset.y = 20;
 
-
-
-	//console.log(this.mapEntities);
+	this.graphicsObject = game.add.graphics(0,0);
+	this.graphicsObject.fixedToCamera = true;
+	this.graphicsObject.cameraOffset.x = 0;
+	this.graphicsObject.cameraOffset.y = 0;
 
 };
 
@@ -243,6 +246,18 @@ testStateOutside.prototype.update = function()
 		{
 			right.health--;
 		}
+
+		//player and enemy attacks
+		if((left.key === 'enemy1' || left.key === 'enemy2' || left.key === 'enemy3') && right.key === 'player')
+		{
+			right.health--;
+		}
+
+		if(left.key === 'player' && (right.key === 'enemy1' || right.key === 'enemy2' || right.key === 'enemy3'))
+		{
+			left.health--;
+		}
+
 	});
 	//game.physics.arcade.collide(this.mapEntities, this.swingAttack, function(left,right){console.log('attack hit');left.kill();});
 	game.physics.arcade.collide(this.mapEntities, this.layer);
@@ -257,7 +272,12 @@ testStateOutside.prototype.update = function()
 	this.mapEntities.sort('y', Phaser.Group.SORT_ASCENDING);
 
 	//update text
-	this.displayText.setText('Arrows to move, \'Z\' to attack\nHealth: '+this.player.health/4+'%');
+	this.displayText.setText('Health:\nArrows to move, \'Z\' to attack');
+	this.graphicsObject.clear();
+	this.graphicsObject.beginFill(0x2c8336);
+	this.graphicsObject.drawRect(100, 18, 400, 18);
+	this.graphicsObject.beginFill(0x3fd150);
+	this.graphicsObject.drawRect(100, 18, this.player.health, 18);
 
 };
 
