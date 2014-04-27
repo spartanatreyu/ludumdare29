@@ -15,6 +15,42 @@ game.trigger = null;
 game.showDebugging = false;
 
 /*TEST STATE Outside*/
+var testState = function(){};
+
+testState.prototype.preload = function()
+{
+	game.load.tilemap('testStateLevel', 'assets/tilemaps/test.json', null, Phaser.Tilemap.TILED_JSON);
+	game.load.image('testStateTiles', 'assets/tilesets/test-tiles.png');
+	game.load.image('player', 'assets/graphics/test-player.png');
+	game.load.image('enemy1', 'assets/graphics/enemy1.png');
+	game.load.image('enemy2', 'assets/graphics/enemy2.png');
+	game.load.image('trigger', 'assets/graphics/trigger.png');
+	game.load.image('medpack', 'assets/graphics/medpack.png');
+	game.load.spritesheet('swing-attack', 'assets/graphics/swing-attack.png',48,48);
+};
+
+testState.prototype.create = function()
+{
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	
+	//Setup Level
+	this.map = game.add.tilemap('testStateLevel');
+	this.map.addTilesetImage('test-tiles', 'testStateTiles', 32, 32);
+	this.map.setCollision([1,2,3,5]);
+
+	this.layer = this.map.createLayer(0);
+	this.layer.resizeWorld();
+
+	standardCreate(this);
+};
+
+testState.prototype.update = function()
+{
+	standardUpdate(this);
+};
+
+
+/*TEST STATE Outside*/
 var testStateOutside = function(){};
 
 testStateOutside.prototype.preload = function()
@@ -78,11 +114,7 @@ END GAME STATES
 *****************************/
 
 function standardCreate(that)
-{
-	//Setup player
-	that.player = game.add.sprite(176, 96, 'player');
-	game.camera.follow(that.player);
-	
+{	
 	//setup the input
 	upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
 	downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -93,11 +125,10 @@ function standardCreate(that)
 	//setup map entities
 	that.mapEntities = game.add.group();
 	that.mapEntities.sort();
-	that.mapEntities.add(that.player);
-	that.mapEntities.player = that.player;
 	
 	that.map.createFromObjects('Object Layer 1', 11, 'trigger', '', true, false, that.mapEntities);
 	that.map.createFromObjects('Object Layer 1', 12, 'medpack', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 13, 'player', '', true, false, that.mapEntities);
 	that.map.createFromObjects('Object Layer 1', 14, 'enemy1', '', true, false, that.mapEntities);
 	that.map.createFromObjects('Object Layer 1', 15, 'enemy2', '', true, false, that.mapEntities);
 
@@ -117,6 +148,8 @@ function standardCreate(that)
 			that.mapEntities.getAt(i).stepInsideEntity = playerStep;
 			that.mapEntities.getAt(i).health = 400;
 			that.mapEntities.getAt(i).body.setSize(32, 32, 0, 32);
+			that.player = that.mapEntities.getAt(i);
+			that.mapEntities.player = that.player;
 		}
 		if (that.mapEntities.getAt(i).key == 'medpack')
 		{
@@ -149,6 +182,8 @@ function standardCreate(that)
 		}
 
 	}
+
+	game.camera.follow(that.player);
 
 	//setup hud
 	that.displayText = game.add.text(20, 20, 'Health:\nArrows to move, \'Z\' to attack',{ font: '16px Courier', fill: '#FFFFFF', align: 'left' });
@@ -297,6 +332,13 @@ function standardUpdate(that)
 				}
 
 				//if the next action is change level
+				if (game.trigger.todo[0].switchLevel)
+				{
+					var temp = game.trigger.todo[0].switchLevel;
+					console.log(game.trigger.todo[0].switchLevel)
+					game.trigger.todo.shift();
+					game.state.add('game', eval(temp), true);
+				}
 			}
 			
 			if (game.trigger.todo.length === 0)
@@ -648,8 +690,6 @@ function componentToHex(c) {
 function rgbArrayToHex(rgbArray) {
     return "0x" + componentToHex(rgbArray[0]) + componentToHex(rgbArray[1]) + componentToHex(rgbArray[2]);
 }
-
-//120, 85,85
 
 //game.state.add('game', testState, true);
 game.state.add('game', testStateOutside, true);

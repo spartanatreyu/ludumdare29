@@ -147,7 +147,7 @@
                  "name":"Trigger",
                  "properties":
                     {
-                     "actions":"[{'message':'hi there'},{'message':'hello world'},{'message':'wassup'},{'message':'idk'}]",
+                     "actions":"[{'message':'hi there'},{'message':'hello world'},{'message':'wassup'},{'message':'idk'},{'switchLevel':'testState'}]",
                      "triggerHeight":"32",
                      "triggerWidth":"64"
                     },
@@ -156,6 +156,20 @@
                  "width":0,
                  "x":768,
                  "y":128
+                }, 
+                {
+                 "gid":13,
+                 "height":0,
+                 "name":"",
+                 "properties":
+                    {
+
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":160,
+                 "y":192
                 }],
          "opacity":1,
          "type":"objectgroup",

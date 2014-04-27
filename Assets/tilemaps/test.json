@@ -10,6 +10,31 @@
          "width":10,
          "x":0,
          "y":0
+        }, 
+        {
+         "height":12,
+         "name":"Object Layer 1",
+         "objects":[
+                {
+                 "gid":13,
+                 "height":0,
+                 "name":"",
+                 "properties":
+                    {
+
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":64,
+                 "y":224
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
         }],
  "orientation":"orthogonal",
  "properties":
