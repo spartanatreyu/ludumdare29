@@ -22,6 +22,7 @@ launchpadLanding.prototype.preload = function()
 {
 	game.load.tilemap('launchpadLandingLevel', 'assets/tilemaps/launchpad-landing.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('launchpadLandingTiles', 'assets/tilesets/outline-tiles.png');
+	game.load.image('speechbar', 'assets/graphics/speechbar.png');
 	game.load.image('player', 'assets/graphics/test-player.png');
 	game.load.image('enemy1', 'assets/graphics/enemy1.png');
 	game.load.image('enemy2', 'assets/graphics/enemy2.png');
@@ -37,7 +38,7 @@ launchpadLanding.prototype.create = function()
 	//Setup Level
 	this.map = game.add.tilemap('launchpadLandingLevel');
 	this.map.addTilesetImage('outline-tiles', 'launchpadLandingTiles', 32, 32);
-	this.map.setCollision([1,2,3,5,6,7,8,9,10,11]);
+	this.map.setCollisionByExclusion('4');
 
 	this.layer = this.map.createLayer(0);
 	this.layer.resizeWorld();
@@ -50,13 +51,14 @@ launchpadLanding.prototype.update = function()
 	standardUpdate(this);
 };
 
-/*TEST STATE Outside*/
+/*TEST STATE*/
 var testState = function(){};
 
 testState.prototype.preload = function()
 {
 	game.load.tilemap('testStateLevel', 'assets/tilemaps/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('testStateTiles', 'assets/tilesets/test-tiles.png');
+	game.load.image('speechbar', 'assets/graphics/speechbar.png');
 	game.load.image('player', 'assets/graphics/test-player.png');
 	game.load.image('enemy1', 'assets/graphics/enemy1.png');
 	game.load.image('enemy2', 'assets/graphics/enemy2.png');
@@ -72,7 +74,7 @@ testState.prototype.create = function()
 	//Setup Level
 	this.map = game.add.tilemap('testStateLevel');
 	this.map.addTilesetImage('test-tiles', 'testStateTiles', 32, 32);
-	this.map.setCollision([1,2,3,5]);
+	this.map.setCollisionByExclusion('4');
 
 	this.layer = this.map.createLayer(0);
 	this.layer.resizeWorld();
@@ -93,12 +95,14 @@ testStateOutside.prototype.preload = function()
 {
 	game.load.tilemap('testStateOutsideLevel', 'assets/tilemaps/testoutside.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('testStateOutsideTiles', 'assets/tilesets/test-tiles-outside.png');
+	game.load.image('speechbar', 'assets/graphics/speechbar.png');
 	game.load.image('player', 'assets/graphics/test-player.png');
 	game.load.image('enemy1', 'assets/graphics/enemy1.png');
 	game.load.image('enemy2', 'assets/graphics/enemy2.png');
 	game.load.image('trigger', 'assets/graphics/trigger.png');
 	game.load.image('medpack', 'assets/graphics/medpack.png');
 	game.load.spritesheet('swing-attack', 'assets/graphics/swing-attack.png',48,48);
+	game.load.script('filter', 'assets/filters/Marble.js');
 };
 
 testStateOutside.prototype.create = function()
@@ -108,17 +112,35 @@ testStateOutside.prototype.create = function()
 	//Setup Level
 	this.map = game.add.tilemap('testStateOutsideLevel');
 	this.map.addTilesetImage('test-tiles-outside', 'testStateOutsideTiles', 32, 32);
-	this.map.setCollision([1,2,3,5]);
+	this.map.setCollisionByExclusion('4');
 
 	this.layer = this.map.createLayer(0);
 	this.layer.resizeWorld();
 
 	standardCreate(this);
+
+
+
+	this.background = game.add.sprite(0, 0);
+	this.background.width = 800;
+	this.background.height = 600;
+
+	this.filter = game.add.filter('Marble', 800, 600);
+	this.filter.alpha = 0.001;
+
+	//	The following properties are available (shown at default values)
+		//	filter.speed = 10.0;
+		//	filter.intensity = 0.30;
+
+	this.background.filters = [this.filter];
+
 };
 
 testStateOutside.prototype.update = function()
 {
 	standardUpdate(this);
+
+	this.filter.update();
 };
 
 
@@ -150,7 +172,7 @@ END GAME STATES
 *****************************/
 
 function standardCreate(that)
-{	
+{
 	//setup the input
 	upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
 	downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -162,11 +184,11 @@ function standardCreate(that)
 	that.mapEntities = game.add.group();
 	that.mapEntities.sort();
 	
-	that.map.createFromObjects('Object Layer 1', 11, 'trigger', '', true, false, that.mapEntities);
-	that.map.createFromObjects('Object Layer 1', 12, 'medpack', '', true, false, that.mapEntities);
-	that.map.createFromObjects('Object Layer 1', 13, 'player', '', true, false, that.mapEntities);
-	that.map.createFromObjects('Object Layer 1', 14, 'enemy1', '', true, false, that.mapEntities);
-	that.map.createFromObjects('Object Layer 1', 15, 'enemy2', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 27, 'trigger', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 28, 'medpack', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 29, 'player', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 30, 'enemy1', '', true, false, that.mapEntities);
+	that.map.createFromObjects('Object Layer 1', 31, 'enemy2', '', true, false, that.mapEntities);
 
 	for (var i = 0; i < that.mapEntities.children.length; i++)
 	{
@@ -222,6 +244,8 @@ function standardCreate(that)
 	game.camera.follow(that.player);
 
 	//setup hud
+	that.speechbar = game.add.sprite(0, -100, 'speechbar');
+
 	that.displayText = game.add.text(20, 20, 'Health:\nArrows to move, \'Z\' to attack',{ font: '16px Courier', fill: '#FFFFFF', align: 'left' });
 	that.displayText.fixedToCamera = true;
 	that.displayText.cameraOffset.x = 20;
@@ -231,6 +255,8 @@ function standardCreate(that)
 	that.graphicsObject.fixedToCamera = true;
 	that.graphicsObject.cameraOffset.x = 0;
 	that.graphicsObject.cameraOffset.y = 0;
+
+	
 }
 
 function standardUpdate(that)
@@ -286,7 +312,6 @@ function standardUpdate(that)
 		{
 			left.health--;
 		}
-
 		if(left.key === 'swing-attack' && (right.key === 'enemy1' || right.key === 'enemy2' || right.key === 'enemy3'))
 		{
 			right.health--;
@@ -301,6 +326,16 @@ function standardUpdate(that)
 		if(left.key === 'player' && (right.key === 'enemy1' || right.key === 'enemy2' || right.key === 'enemy3'))
 		{
 			left.health--;
+		}
+
+		//player and trigger
+		if(left.key === 'trigger' && right.key === 'player')
+		{
+			global.trigger = left;
+		}
+		if(left.key === 'player' && right.key === 'trigger')
+		{
+			global.trigger = right;
 		}
 
 	});
@@ -350,6 +385,14 @@ function standardUpdate(that)
 					if(global.trigger.waiting === false)
 					{
 						global.trigger.waiting = true;
+						
+						that.speechbar.x = that.camera.x;
+						that.speechbar.y = that.camera.y+400;
+						//that.speechbar.z = -2;
+						//that.displayText.z = -1;
+						//console.log(that.graphicsObject.z);
+						//console.log(that.displayText.z);
+						//console.log(that.mapEntities);
 					}
 					if(global.trigger.waiting === true)
 					{
@@ -363,6 +406,8 @@ function standardUpdate(that)
 						{
 							global.trigger.todo.shift();
 							global.trigger.waiting = false;
+							that.speechbar.x = 0;
+							that.speechbar.y = -100;
 						}	
 					}
 				}
