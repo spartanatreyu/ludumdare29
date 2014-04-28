@@ -358,8 +358,8 @@ function standardUpdate(that)
 		that.displayText.setText('Health:\nArrows to move, \'Z\' to attack');
 		that.displayText.cameraOffset.x = 20;
 		that.displayText.cameraOffset.y = 20;
-		that.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(that.player.health/1200,0.45,0.65)));
-		that.graphicsObject.drawRect(100, 18, 400, 18);
+		//that.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(that.player.health/1200,0.45,0.65)));
+		//that.graphicsObject.drawRect(100, 18, 400, 18);
 		that.graphicsObject.beginFill(rgbArrayToHex(hslToRgb(that.player.health/1200,0.85,0.65)));
 		//that.graphicsObject.beginFill('');
 		that.graphicsObject.drawRect(100, 18, that.player.health, 18);		
